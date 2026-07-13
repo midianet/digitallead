@@ -1,0 +1,46 @@
+# Configuração do cert-manager da Plataforma Digitalead.
+
+# Instala os CustomResourceDefinitions:
+# Certificate, ClusterIssuer, Order, Challenge etc.
+crds:
+  enabled: true
+
+# A integração com Prometheus será habilitada posteriormente,
+# quando a stack de monitoramento estiver instalada.
+prometheus:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+webhook:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+cainjector:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+
+startupapicheck:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
