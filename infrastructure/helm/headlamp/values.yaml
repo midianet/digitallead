@@ -1,0 +1,58 @@
+# Configuração do Headlamp para a Plataforma Digitalead.
+
+replicaCount: 1
+
+fullnameOverride: headlamp
+
+config:
+  inCluster: true
+
+  # Não permite instalação/remoção de charts pela interface neste momento.
+  enableHelm: false
+
+  # Nunca autenticar automaticamente todos os usuários com o token do Pod.
+  unsafeUseServiceAccountToken: false
+
+  # Plugins estáticos incluídos na imagem podem ser utilizados.
+  staticPlugins:
+    enabled: true
+
+serviceAccount:
+  create: true
+  name: headlamp
+
+# O chart oficial cria por padrão um ClusterRoleBinding com cluster-admin.
+# Manteremos nesta primeira instalação para validar o funcionamento.
+# A autenticação do usuário ainda exigirá um token próprio.
+clusterRoleBinding:
+  create: true
+  clusterRoleName: cluster-admin
+
+service:
+  type: ClusterIP
+  port: 80
+
+# Não publicar externamente até termos TLS e autenticação definidos.
+ingress:
+  enabled: false
+
+persistentVolumeClaim:
+  enabled: false
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 100
+  runAsGroup: 101
+  privileged: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
