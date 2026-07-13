@@ -17,6 +17,9 @@ config:
   staticPlugins:
     enabled: true
 
+  extraArgs:
+    - "-in-cluster-context-name=digitallead"      
+
 serviceAccount:
   create: true
   name: headlamp
