@@ -1,0 +1,45 @@
+# Configuração declarativa do servidor K3s.
+# Fonte de verdade:
+# /opt/digitallead/infrastructure/k3s/config.yaml
+#
+# Destino no servidor:
+# /etc/rancher/k3s/config.yaml
+
+# Nome exibido pelo Kubernetes para este nó.
+node-name: dl-platform-01
+
+# Protege Secrets armazenados no datastore do Kubernetes.
+secrets-encryption: true
+
+# Mantém o kubeconfig administrativo acessível apenas ao root.
+write-kubeconfig-mode: "0600"
+
+# Endereços adicionais aceitos pelo certificado da API Kubernetes.
+# O IP permite administrar o cluster remotamente futuramente,
+# desde que a porta 6443 esteja protegida por firewall.
+tls-san:
+  - "217.216.55.208"
+  - "dl-platform-01"
+
+# Identifica o nó para consultas e futuras regras de agendamento.
+node-label:
+  - "digitallead.com.br/platform=core"
+  - "digitallead.com.br/environment=shared"
+  - "digitallead.com.br/provider=contabo"
+
+# CIDR da rede interna dos Pods.
+# Explicitado para documentar a decisão, mesmo sendo o padrão do K3s.
+cluster-cidr: "10.42.0.0/16"
+
+# CIDR da rede virtual dos Services Kubernetes.
+# Explicitado para documentar a decisão.
+service-cidr: "10.43.0.0/16"
+
+# DNS virtual interno do cluster.
+cluster-dns: "10.43.0.10"
+
+# Domínio DNS interno dos Services.
+cluster-domain: "cluster.local"
+
+# Diretório principal onde o K3s armazenará seu estado.
+data-dir: "/var/lib/rancher/k3s"
