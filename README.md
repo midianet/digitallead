@@ -102,9 +102,10 @@ scripts/
 
 A instalação da plataforma deve seguir a ordem abaixo:
 
-1. [Provisionamento da VPS](docs/bootstrap/01-provisionamento-vps/README.md)
-2. [Hardening do Ubuntu](docs/bootstrap/02-hardening-ubuntu/README.md)
-3. [Instalação do K3s](docs/bootstrap/03-instalacao-k3s/README.md)
+- [Arquitetura da plataforma](docs/architecture/README.md)
+- [Provisionamento da VPS](docs/bootstrap/01-provisionamento-vps/README.md)
+- [Hardening do Ubuntu](docs/bootstrap/02-hardening-ubuntu/README.md)
+- [Instalação do K3s](docs/bootstrap/03-instalacao-k3s/README.md)
 
 ## Princípios
 
