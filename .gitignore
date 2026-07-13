@@ -1,0 +1,45 @@
+cat > /opt/digitallead/.gitignore <<'EOF'
+# Secrets e credenciais
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.kubeconfig
+kubeconfig
+.env
+.env.*
+secrets.yaml
+secret.yaml
+*-secret.yaml
+*-secrets.yaml
+
+# Backups e bancos
+*.sql
+*.dump
+*.backup
+*.tar
+*.tar.gz
+*.zip
+
+# Arquivos temporários
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Helm gerado
+charts/
+*.tgz
+EOF
