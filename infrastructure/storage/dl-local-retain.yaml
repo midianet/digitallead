@@ -1,0 +1,14 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: dl-local-retain
+  labels:
+    app.kubernetes.io/part-of: digitallead-platform
+    app.kubernetes.io/managed-by: kubectl
+    digitallead.com.br/purpose: persistent-data
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: rancher.io/local-path
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: false
