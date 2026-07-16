@@ -108,3 +108,12 @@ O catálogo poderá futuramente alimentar:
 * consultas com inteligência artificial;
 * relatórios de riscos e conformidade.
 
+
+## Validação
+
+O catálogo possui validação automática baseada em JSON Schema.
+
+Executar localmente:
+
+```bash
+./scripts/catalog/validate.sh

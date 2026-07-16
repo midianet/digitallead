@@ -1,0 +1,558 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://platform.digitallead.com.br/schemas/platform-service-v1.schema.json",
+  "title": "Digitalead Platform Service Definition",
+  "description": "Contrato canônico para serviços da Plataforma Digitalead.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "platform.digitallead.com.br/v1"
+    },
+    "kind": {
+      "const": "PlatformService"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "displayName",
+        "description",
+        "tags"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(PLT|APP)-[0-9]{3}$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "minLength": 2,
+          "maxLength": 63
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lifecycle",
+        "owner",
+        "domain",
+        "tier",
+        "criticality",
+        "deployment",
+        "network",
+        "authentication",
+        "storage",
+        "backup",
+        "observability",
+        "resources",
+        "dependencies",
+        "consumers",
+        "documentation",
+        "contacts",
+        "risks",
+        "notes"
+      ],
+      "properties": {
+        "lifecycle": {
+          "enum": [
+            "planned",
+            "building",
+            "production",
+            "deprecated",
+            "retired"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "domain": {
+          "enum": [
+            "core",
+            "data",
+            "identity",
+            "security",
+            "observability",
+            "logging",
+            "integration",
+            "messaging",
+            "backup",
+            "application"
+          ]
+        },
+        "tier": {
+          "enum": [
+            "platform",
+            "application",
+            "shared-service"
+          ]
+        },
+        "criticality": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "deployment": {
+          "$ref": "#/$defs/deployment"
+        },
+        "network": {
+          "$ref": "#/$defs/network"
+        },
+        "authentication": {
+          "$ref": "#/$defs/authentication"
+        },
+        "storage": {
+          "$ref": "#/$defs/storage"
+        },
+        "backup": {
+          "$ref": "#/$defs/backup"
+        },
+        "observability": {
+          "$ref": "#/$defs/observability"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "consumers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "documentation": {
+          "$ref": "#/$defs/documentation"
+        },
+        "contacts": {
+          "$ref": "#/$defs/contacts"
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/risk"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nullableString": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "namespace",
+        "release",
+        "version",
+        "repository",
+        "configurationPath"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "helm",
+            "manifest",
+            "operator",
+            "external",
+            "k3s-addon"
+          ]
+        },
+        "namespace": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "release": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "configurationPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "serviceType",
+        "ingress",
+        "ports"
+      ],
+      "properties": {
+        "serviceType": {
+          "enum": [
+            "ClusterIP",
+            "LoadBalancer",
+            "NodePort",
+            "ExternalName",
+            "None"
+          ]
+        },
+        "ingress": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "hostname",
+            "tls"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "hostname": {
+              "$ref": "#/$defs/nullableString"
+            },
+            "tls": {
+              "type": "boolean"
+            }
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          }
+        }
+      }
+    },
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "port",
+        "protocol",
+        "exposure"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "protocol": {
+          "enum": [
+            "TCP",
+            "UDP"
+          ]
+        },
+        "exposure": {
+          "enum": [
+            "internal",
+            "external"
+          ]
+        }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "provider",
+        "oidcPlanned"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "none",
+            "token",
+            "local",
+            "oidc",
+            "database-credentials",
+            "service-account",
+            "mutual-tls"
+          ]
+        },
+        "provider": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "oidcPlanned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "persistent",
+        "storageClass",
+        "requestedSize",
+        "reclaimPolicy",
+        "physicalPath"
+      ],
+      "properties": {
+        "persistent": {
+          "type": "boolean"
+        },
+        "storageClass": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "requestedSize": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "reclaimPolicy": {
+          "enum": [
+            "Delete",
+            "Retain",
+            null
+          ]
+        },
+        "physicalPath": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "backup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "enabled",
+        "method",
+        "destination",
+        "retention",
+        "restoreProcedure"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "method": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "destination": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "retention": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "restoreProcedure": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metrics",
+        "logs",
+        "dashboards",
+        "alerts"
+      ],
+      "properties": {
+        "metrics": {
+          "type": "boolean"
+        },
+        "logs": {
+          "type": "boolean"
+        },
+        "dashboards": {
+          "type": "boolean"
+        },
+        "alerts": {
+          "type": "boolean"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requests",
+        "limits"
+      ],
+      "properties": {
+        "requests": {
+          "$ref": "#/$defs/resourcePair"
+        },
+        "limits": {
+          "$ref": "#/$defs/resourcePair"
+        }
+      }
+    },
+    "resourcePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cpu",
+        "memory"
+      ],
+      "properties": {
+        "cpu": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "memory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(PLT|APP)-[0-9]{3}$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 2
+        }
+      }
+    },
+    "documentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "architecture",
+        "bootstrap",
+        "operations",
+        "troubleshooting"
+      ],
+      "properties": {
+        "architecture": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "bootstrap": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "operations": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "troubleshooting": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "contacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "technicalOwner",
+        "businessOwner"
+      ],
+      "properties": {
+        "technicalOwner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "businessOwner": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "mitigation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^RISK-[A-Z0-9-]+-[0-9]{3}$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10
+        },
+        "mitigation": {
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    }
+  }
+}

@@ -46,3 +46,6 @@ EOF
 
 # Secrets reais da infraestrutura
 infrastructure/database/secrets/
+
+# Ambiente virtual Python
+.venv/

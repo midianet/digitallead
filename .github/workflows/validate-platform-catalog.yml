@@ -1,0 +1,45 @@
+name: Validate Platform Catalog
+
+on:
+  pull_request:
+    paths:
+      - "platform/catalog/**"
+      - "scripts/catalog/**"
+      - "requirements-dev.txt"
+      - ".github/workflows/validate-platform-catalog.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "platform/catalog/**"
+      - "scripts/catalog/**"
+      - "requirements-dev.txt"
+      - ".github/workflows/validate-platform-catalog.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate PlatformService definitions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --requirement requirements-dev.txt
+
+      - name: Validate platform catalog
+        run: |
+          python scripts/catalog/validate-platform-catalog.py
