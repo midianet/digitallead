@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: headlamp
+  namespace: dl-infra
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/part-of: digitallead-platform
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - headlamp.app.digitallead.com.br
+      secretName: headlamp-tls
+
+  rules:
+    - host: headlamp.app.digitallead.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: headlamp
+                port:
+                  number: 80

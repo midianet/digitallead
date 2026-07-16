@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+  labels:
+    app.kubernetes.io/part-of: digitallead-platform
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  acme:
+    email: danielsrosa@hotmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+
+    privateKeySecretRef:
+      name: letsencrypt-production-account-key
+
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: traefik
