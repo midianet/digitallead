@@ -43,3 +43,6 @@ secret.yaml
 charts/
 *.tgz
 EOF
+
+# Secrets reais da infraestrutura
+infrastructure/database/secrets/

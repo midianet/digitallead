@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgresql-auth
+  namespace: dl-database
+type: Opaque
+stringData:
+  # Nunca preencha este arquivo com a senha real.
+  postgres-password: SUBSTITUIR_FORA_DO_GIT

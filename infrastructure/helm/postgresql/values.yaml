@@ -1,0 +1,65 @@
+# PostgreSQL principal da Plataforma Digitalead.
+
+architecture: standalone
+
+fullnameOverride: postgresql
+
+auth:
+  enablePostgresUser: true
+  existingSecret: postgresql-auth
+  secretKeys:
+    adminPasswordKey: postgres-password
+  usePasswordFiles: true
+
+primary:
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+
+  persistence:
+    enabled: true
+    storageClass: dl-local-retain
+    accessModes:
+      - ReadWriteOnce
+    size: 30Gi
+    annotations:
+      digitallead.com.br/backup-required: "true"
+
+  persistentVolumeClaimRetentionPolicy:
+    enabled: true
+    whenScaled: Retain
+    whenDeleted: Retain
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+  podLabels:
+    app.kubernetes.io/part-of: digitallead-platform
+    digitallead.com.br/purpose: database
+
+  networkPolicy:
+    enabled: false
+
+  extendedConfiguration: |
+    timezone = 'America/Sao_Paulo'
+    log_timezone = 'America/Sao_Paulo'
+    max_connections = 150
+    shared_buffers = '512MB'
+    effective_cache_size = '2GB'
+    maintenance_work_mem = '128MB'
+    work_mem = '8MB'
+    log_min_duration_statement = 1000
+    log_connections = on
+    log_disconnections = on
+
+metrics:
+  enabled: false
+
+volumePermissions:
+  enabled: false
