@@ -1,0 +1,115 @@
+apiVersion: platform.digitallead.com.br/v1
+kind: PlatformService
+
+metadata:
+  id: PLT-101
+  name: postgresql
+  displayName: PostgreSQL
+  description: Banco de dados relacional compartilhado da Plataforma Digitalead.
+  tags:
+    - database
+    - relational
+    - stateful
+    - platform
+
+spec:
+  lifecycle: production
+  owner: platform
+  domain: data
+  tier: platform
+  criticality: critical
+
+  deployment:
+    type: helm
+    namespace: dl-database
+    release: postgresql
+    version: "18.4.0"
+    repository: bitnami/postgresql
+    configurationPath: infrastructure/helm/postgresql/values.yaml
+
+  network:
+    serviceType: ClusterIP
+    ingress:
+      enabled: false
+      hostname: null
+      tls: false
+    ports:
+      - name: postgresql
+        port: 5432
+        protocol: TCP
+        exposure: internal
+
+  authentication:
+    type: database-credentials
+    provider: postgresql
+    oidcPlanned: false
+
+  storage:
+    persistent: true
+    storageClass: dl-local-retain
+    requestedSize: 30Gi
+    reclaimPolicy: Retain
+    physicalPath: /var/lib/rancher/k3s/storage
+
+  backup:
+    required: true
+    enabled: false
+    method: pg_dump-and-pg_dumpall
+    destination: s3-compatible-object-storage
+    retention: pending-definition
+    restoreProcedure: docs/operations/database/restore-postgresql.md
+
+  observability:
+    metrics: false
+    logs: true
+    dashboards: false
+    alerts: false
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+
+  dependencies:
+    - id: PLT-005
+      name: local-path-provisioner
+      type: storage
+    - id: PLT-006
+      name: dl-local-retain
+      type: storage-class
+
+  consumers:
+    - keycloak
+    - digitallead-prod
+    - digitallead-qa
+    - digitallead-dev
+
+  documentation:
+    architecture: docs/architecture/database/README.md
+    bootstrap: docs/bootstrap/06-postgresql/README.md
+    operations: docs/operations/database/
+    troubleshooting: docs/troubleshooting/postgresql.md
+
+  contacts:
+    technicalOwner: platform
+    businessOwner: digitallead
+
+  risks:
+    - id: RISK-POSTGRES-001
+      description: A instância possui um único Pod e não oferece alta disponibilidade.
+      mitigation: Backup externo e procedimento documentado de reconstrução.
+    - id: RISK-POSTGRES-002
+      description: O volume está no disco local da única VPS.
+      mitigation: Backup lógico periódico em armazenamento externo.
+    - id: RISK-POSTGRES-003
+      description: O PVC não suporta expansão automática pela StorageClass atual.
+      mitigation: Monitorar capacidade e planejar migração antes de atingir o limite.
+
+  notes:
+    - A porta 5432 não deve ser publicada na internet.
+    - Aplicações não devem utilizar o usuário administrativo postgres.
+    - Cada aplicação deve possuir banco e usuário próprios.
+    - A política Retain reduz exclusões acidentais, mas não substitui backup.

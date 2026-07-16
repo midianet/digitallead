@@ -1,0 +1,83 @@
+apiVersion: platform.digitallead.com.br/v1
+kind: PlatformService
+
+metadata:
+  id: PLT-000
+  name: service-name
+  displayName: Service Name
+  description: Descrição objetiva da responsabilidade do serviço.
+  tags:
+    - platform
+
+spec:
+  lifecycle: planned
+  owner: platform
+  domain: core
+  tier: platform
+  criticality: medium
+
+  deployment:
+    type: helm
+    namespace: namespace-name
+    release: release-name
+    version: "0.0.0"
+    repository: repository-reference
+    configurationPath: infrastructure/helm/service-name/values.yaml
+
+  network:
+    serviceType: ClusterIP
+    ingress:
+      enabled: false
+      hostname: null
+      tls: false
+    ports: []
+
+  authentication:
+    type: none
+    provider: null
+    oidcPlanned: false
+
+  storage:
+    persistent: false
+    storageClass: null
+    requestedSize: null
+    reclaimPolicy: null
+    physicalPath: null
+
+  backup:
+    required: false
+    enabled: false
+    method: null
+    destination: null
+    retention: null
+    restoreProcedure: null
+
+  observability:
+    metrics: false
+    logs: true
+    dashboards: false
+    alerts: false
+
+  resources:
+    requests:
+      cpu: null
+      memory: null
+    limits:
+      cpu: null
+      memory: null
+
+  dependencies: []
+  consumers: []
+
+  documentation:
+    architecture: null
+    bootstrap: null
+    operations: null
+    troubleshooting: null
+
+  contacts:
+    technicalOwner: platform
+    businessOwner: null
+
+  risks: []
+  notes: []
