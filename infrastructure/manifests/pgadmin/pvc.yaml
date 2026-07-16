@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgadmin-data
+  namespace: dl-infra
+  labels:
+    app.kubernetes.io/name: pgadmin
+    app.kubernetes.io/part-of: digitallead-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: dl-local-retain
+  resources:
+    requests:
+      storage: 2Gi

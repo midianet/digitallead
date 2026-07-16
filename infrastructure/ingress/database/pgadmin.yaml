@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pgadmin
+  namespace: dl-infra
+  labels:
+    app.kubernetes.io/name: pgadmin
+    app.kubernetes.io/part-of: digitallead-platform
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - pgadmin.app.digitallead.com.br
+      secretName: pgadmin-tls
+
+  rules:
+    - host: pgadmin.app.digitallead.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pgadmin
+                port:
+                  number: 80
