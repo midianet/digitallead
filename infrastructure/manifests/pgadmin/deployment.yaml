@@ -63,10 +63,6 @@ spec:
             runAsNonRoot: true
             runAsUser: 5050
             runAsGroup: 5050
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
 
           readinessProbe:
             httpGet:

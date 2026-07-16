@@ -1,0 +1,25 @@
+apiVersion: platform.digitallead.com.br/v1alpha1
+kind: HelmComponent
+
+metadata:
+  name: mongodb-kubernetes-operator
+  id: PLT-701
+  description: MongoDB Kubernetes Operator utilizado pela plataforma de logging
+
+release:
+  name: mongodb-kubernetes
+  namespace: dl-logging
+  createNamespace: true
+  atomic: true
+  timeout: 10m
+  historyMax: 10
+
+chart:
+  repository:
+    name: mongodb-kubernetes
+    url: https://mongodb.github.io/helm-charts
+  name: mongodb-kubernetes
+  version: 1.9.1
+
+values:
+  file: values.yaml

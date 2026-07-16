@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dl-monitoring
+  labels:
+    app.kubernetes.io/part-of: digitallead-platform
+    digitallead.com.br/domain: observability

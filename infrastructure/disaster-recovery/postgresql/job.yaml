@@ -1,0 +1,101 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgresql-dr-validation
+  namespace: dl-database
+  labels:
+    app.kubernetes.io/name: postgresql-dr-validation
+    app.kubernetes.io/component: disaster-recovery
+    app.kubernetes.io/part-of: digitallead-platform
+    digitallead.com.br/id: PLT-503
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 7200
+  ttlSecondsAfterFinished: 86400
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgresql-dr-validation
+        app.kubernetes.io/component: disaster-recovery
+        app.kubernetes.io/part-of: digitallead-platform
+        digitallead.com.br/id: PLT-503
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: dr-validation
+          image: postgres:18.4-bookworm
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /bin/bash
+            - /scripts/dr-validation.sh
+
+          env:
+            - name: BACKUP_ROOT
+              value: /backup/postgresql
+
+            - name: PGDATA
+              value: /var/lib/postgresql/dr-data
+
+            - name: POSTGRES_PORT
+              value: "55432"
+
+            - name: POSTGRES_USER
+              value: digitallead_dr_admin
+
+            # Vazio seleciona o backup mais recente.
+            - name: BACKUP_TIMESTAMP
+              value: ""
+
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: backup
+              mountPath: /backup
+              readOnly: true
+
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+
+            - name: postgres-data
+              mountPath: /var/lib/postgresql
+
+            - name: temporary
+              mountPath: /tmp
+
+      volumes:
+        - name: backup
+          persistentVolumeClaim:
+            claimName: postgresql-backup
+
+        - name: scripts
+          configMap:
+            name: postgresql-dr-validation-script
+            defaultMode: 0444
+
+        - name: postgres-data
+          emptyDir:
+            sizeLimit: 10Gi
+
+        - name: temporary
+          emptyDir:
+            sizeLimit: 1Gi

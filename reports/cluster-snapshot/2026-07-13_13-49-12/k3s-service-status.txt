@@ -1,0 +1,29 @@
+● k3s.service - Lightweight Kubernetes
+     Loaded: loaded (/etc/systemd/system/k3s.service; enabled; preset: enabled)
+     Active: active (running) since Mon 2026-07-13 13:32:11 -03; 17min ago
+       Docs: https://k3s.io
+    Process: 3380 ExecStartPre=/sbin/modprobe br_netfilter (code=exited, status=0/SUCCESS)
+    Process: 3388 ExecStartPre=/sbin/modprobe overlay (code=exited, status=0/SUCCESS)
+   Main PID: 3394 (k3s-server)
+      Tasks: 120
+     Memory: 1.9G (peak: 1.9G)
+        CPU: 7min 3.657s
+     CGroup: /system.slice/k3s.service
+             ├─3394 "/usr/local/bin/k3s server"
+             ├─3426 "containerd "
+             ├─4218 /var/lib/rancher/k3s/data/ab38b9a07efde0162f9e172aeda395c9d03e5a54b85bd8e62438f58520b83167/bin/containerd-shim-runc-v2 -namespace k8s.io -id 1a161d1d96691e4eb58973c99f8814c054c7601d6e605a5b8f46dacfe85deb16 -address /run/k3s/containerd/containerd.sock
+             ├─4309 /var/lib/rancher/k3s/data/ab38b9a07efde0162f9e172aeda395c9d03e5a54b85bd8e62438f58520b83167/bin/containerd-shim-runc-v2 -namespace k8s.io -id 5bef8f2d1c468f305018112da0987a64e12ee6e63d05e6177c8f29321b0c789b -address /run/k3s/containerd/containerd.sock
+             ├─4422 /var/lib/rancher/k3s/data/ab38b9a07efde0162f9e172aeda395c9d03e5a54b85bd8e62438f58520b83167/bin/containerd-shim-runc-v2 -namespace k8s.io -id 2d9aa068bf345d6baf6e2969848903cd58446b9b96b78b90220b692292aebba3 -address /run/k3s/containerd/containerd.sock
+             ├─5435 /var/lib/rancher/k3s/data/ab38b9a07efde0162f9e172aeda395c9d03e5a54b85bd8e62438f58520b83167/bin/containerd-shim-runc-v2 -namespace k8s.io -id 1f2a77124ccc8d6e9a0c0c0d7517e851b93e1f5a56e1e321f82a4175a74a455b -address /run/k3s/containerd/containerd.sock
+             └─5463 /var/lib/rancher/k3s/data/ab38b9a07efde0162f9e172aeda395c9d03e5a54b85bd8e62438f58520b83167/bin/containerd-shim-runc-v2 -namespace k8s.io -id 8d0825993f4f025b7f3a69a395b363c3f30d81441c92dbd1d75f2cdb4c68f408 -address /run/k3s/containerd/containerd.sock
+
+Jul 13 13:33:16 dl-platform-01 k3s[3394]: I0713 13:33:16.786739    3394 resource_quota_monitor.go:229] "QuotaMonitor created object count evaluator" resource="ingressroutes.traefik.io"
+Jul 13 13:33:16 dl-platform-01 k3s[3394]: I0713 13:33:16.786764    3394 resource_quota_monitor.go:229] "QuotaMonitor created object count evaluator" resource="serverstransports.traefik.io"
+Jul 13 13:33:16 dl-platform-01 k3s[3394]: I0713 13:33:16.789013    3394 shared_informer.go:370] "Waiting for caches to sync"
+Jul 13 13:33:18 dl-platform-01 k3s[3394]: I0713 13:33:18.236068    3394 shared_informer.go:370] "Waiting for caches to sync"
+Jul 13 13:33:18 dl-platform-01 k3s[3394]: I0713 13:33:18.812035    3394 shared_informer.go:377] "Caches are synced"
+Jul 13 13:33:19 dl-platform-01 k3s[3394]: I0713 13:33:19.336704    3394 shared_informer.go:377] "Caches are synced"
+Jul 13 13:42:07 dl-platform-01 k3s[3394]: I0713 13:42:07.536281    3394 cidrallocator.go:278] updated ClusterIP allocator for Service CIDR 10.43.0.0/16
+Jul 13 13:47:06 dl-platform-01 k3s[3394]: time="2026-07-13T13:47:06-03:00" level=info msg="COMPACT compactRev=0 targetCompactRev=14 currentRev=1014"
+Jul 13 13:47:06 dl-platform-01 k3s[3394]: time="2026-07-13T13:47:06-03:00" level=info msg="COMPACT deleted 0 rows from 14 revisions in 903.993µs - compacted to 14/1014"
+Jul 13 13:47:06 dl-platform-01 k3s[3394]: time="2026-07-13T13:47:06-03:00" level=info msg="COMPACT compacted from 0 to 14 in 1 transactions over 1ms"

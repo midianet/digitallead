@@ -1,0 +1,8 @@
+NAMESPACE     NAME                                      READY   STATUS      RESTARTS   AGE   IP          NODE             NOMINATED NODE   READINESS GATES
+kube-system   coredns-8b64bcf7c-krlpl                   1/1     Running     0          16m   10.42.0.4   dl-platform-01   <none>           <none>
+kube-system   helm-install-traefik-6ztqq                0/1     Completed   2          16m   10.42.0.2   dl-platform-01   <none>           <none>
+kube-system   helm-install-traefik-crd-lg4zs            0/1     Completed   0          16m   10.42.0.3   dl-platform-01   <none>           <none>
+kube-system   local-path-provisioner-5d9d9885bc-9kgv7   1/1     Running     0          16m   10.42.0.5   dl-platform-01   <none>           <none>
+kube-system   metrics-server-786d997795-s46dl           1/1     Running     0          16m   10.42.0.6   dl-platform-01   <none>           <none>
+kube-system   svclb-traefik-62aa8728-ftj8p              2/2     Running     0          16m   10.42.0.7   dl-platform-01   <none>           <none>
+kube-system   traefik-d98ccfdf6-dr6fl                   1/1     Running     0          16m   10.42.0.8   dl-platform-01   <none>           <none>

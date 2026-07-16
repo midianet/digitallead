@@ -1,4 +1,3 @@
-cat > scripts/server/install-helm.sh <<'EOF'
 #!/usr/bin/env bash
 
 set -Eeuo pipefail
@@ -95,4 +94,3 @@ log "Validando instalação"
 helm version
 
 log "Helm instalado com sucesso."
-EOF

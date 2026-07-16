@@ -1,0 +1,5 @@
+NAMESPACE     NAME                     READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS               IMAGES                                    SELECTOR
+kube-system   coredns                  1/1     1            1           16m   coredns                  rancher/mirrored-coredns-coredns:1.14.4   k8s-app=kube-dns
+kube-system   local-path-provisioner   1/1     1            1           16m   local-path-provisioner   rancher/local-path-provisioner:v0.0.36    app=local-path-provisioner
+kube-system   metrics-server           1/1     1            1           16m   metrics-server           rancher/mirrored-metrics-server:v0.8.1    k8s-app=metrics-server
+kube-system   traefik                  1/1     1            1           16m   traefik                  rancher/mirrored-library-traefik:3.7.4    app.kubernetes.io/instance=traefik-kube-system,app.kubernetes.io/name=traefik

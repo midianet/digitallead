@@ -1,0 +1,98 @@
+Name:               dl-platform-01
+Roles:              control-plane
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=k3s
+                    beta.kubernetes.io/os=linux
+                    digitallead.com.br/environment=shared
+                    digitallead.com.br/platform=core
+                    digitallead.com.br/provider=contabo
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=dl-platform-01
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=true
+                    node.kubernetes.io/instance-type=k3s
+Annotations:        alpha.kubernetes.io/provided-node-ip: 217.216.55.208,2605:a144:2343:4902::1
+                    flannel.alpha.coreos.com/backend-data: {"VNI":1,"VtepMAC":"7a:f9:61:2b:2c:7e"}
+                    flannel.alpha.coreos.com/backend-type: vxlan
+                    flannel.alpha.coreos.com/kube-subnet-manager: true
+                    flannel.alpha.coreos.com/public-ip: 217.216.55.208
+                    k3s.io/encryption-config-hash: start-68cedbd384fbcae48ed3066911ad962494c99f71c4cd65ef6c0f5fbf126fe7c0
+                    k3s.io/hostname: dl-platform-01
+                    k3s.io/internal-ip: 217.216.55.208,2605:a144:2343:4902::1
+                    k3s.io/node-args:
+                      ["server","--node-name","dl-platform-01","--secrets-encryption","true","--write-kubeconfig-mode","0600","--tls-san","217.216.55.208","--tl...
+                    k3s.io/node-config-hash: OT55I4ZFWVJMFEDX57GJNRTLN7O65CNKXSYSD6R2QHBAVHKYZUIQ====
+                    k3s.io/node-env: {}
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Mon, 13 Jul 2026 13:32:12 -0300
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  dl-platform-01
+  AcquireTime:     <unset>
+  RenewTime:       Mon, 13 Jul 2026 13:49:10 -0300
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Mon, 13 Jul 2026 13:45:38 -0300   Mon, 13 Jul 2026 13:32:12 -0300   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Mon, 13 Jul 2026 13:45:38 -0300   Mon, 13 Jul 2026 13:32:12 -0300   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Mon, 13 Jul 2026 13:45:38 -0300   Mon, 13 Jul 2026 13:32:12 -0300   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Mon, 13 Jul 2026 13:45:38 -0300   Mon, 13 Jul 2026 13:32:12 -0300   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  217.216.55.208
+  InternalIP:  2605:a144:2343:4902::1
+  Hostname:    dl-platform-01
+Capacity:
+  cpu:                8
+  ephemeral-storage:  202051056Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             24608568Ki
+  pods:               110
+Allocatable:
+  cpu:                8
+  ephemeral-storage:  196555267123
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             24608568Ki
+  pods:               110
+System Info:
+  Machine ID:                 2029db1a5df04eb4ae5432fe57053a43
+  System UUID:                2029db1a-5df0-4eb4-ae54-32fe57053a43
+  Boot ID:                    88fca6d8-2be4-4b70-b37c-65f65cb37704
+  Kernel Version:             6.8.0-134-generic
+  OS Image:                   Ubuntu 24.04.4 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://2.2.5-k3s2
+  Kubelet Version:            v1.35.6+k3s1
+  Kube-Proxy Version:         
+PodCIDR:                      10.42.0.0/24
+PodCIDRs:                     10.42.0.0/24
+ProviderID:                   k3s://dl-platform-01
+Non-terminated Pods:          (5 in total)
+  Namespace                   Name                                       CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                       ------------  ----------  ---------------  -------------  ---
+  kube-system                 coredns-8b64bcf7c-krlpl                    100m (1%)     0 (0%)      70Mi (0%)        170Mi (0%)     16m
+  kube-system                 local-path-provisioner-5d9d9885bc-9kgv7    0 (0%)        0 (0%)      0 (0%)           0 (0%)         16m
+  kube-system                 metrics-server-786d997795-s46dl            100m (1%)     0 (0%)      70Mi (0%)        0 (0%)         16m
+  kube-system                 svclb-traefik-62aa8728-ftj8p               0 (0%)        0 (0%)      0 (0%)           0 (0%)         16m
+  kube-system                 traefik-d98ccfdf6-dr6fl                    0 (0%)        0 (0%)      0 (0%)           0 (0%)         16m
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests    Limits
+  --------           --------    ------
+  cpu                200m (2%)   0 (0%)
+  memory             140Mi (0%)  170Mi (0%)
+  ephemeral-storage  0 (0%)      0 (0%)
+  hugepages-1Gi      0 (0%)      0 (0%)
+  hugepages-2Mi      0 (0%)      0 (0%)
+Events:
+  Type    Reason                          Age   From                   Message
+  ----    ------                          ----  ----                   -------
+  Normal  CertificateExpirationOK         17m   k3s-cert-monitor       Node and Certificate Authority certificates managed by k3s are OK
+  Normal  NodePasswordValidationComplete  17m   k3s-supervisor         Deferred node password secret validation complete
+  Normal  RegisteredNode                  16m   node-controller        Node dl-platform-01 event: Registered Node dl-platform-01 in Controller
+  Normal  Synced                          16m   cloud-node-controller  Node synced successfully
+  Normal  CIDRAssignmentFailed            16m   cidrAllocator          Node dl-platform-01 status is now: CIDRAssignmentFailed

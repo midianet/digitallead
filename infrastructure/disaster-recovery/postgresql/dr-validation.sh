@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+BACKUP_ROOT="${BACKUP_ROOT:-/backup/postgresql}"
+PGDATA="${PGDATA:-/var/lib/postgresql/dr-data}"
+POSTGRES_PORT="${POSTGRES_PORT:-55432}"
+POSTGRES_USER="${POSTGRES_USER:-digitallead_dr_admin}"
+BACKUP_TIMESTAMP="${BACKUP_TIMESTAMP:-}"
+
+declare -a RESTORED_DATABASES=()
+
+log() {
+  printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$1"
+}
+
+fail() {
+  printf '[%s] ERRO: %s\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" \
+    "$1" >&2
+
+  exit 1
+}
+
+cleanup() {
+  local exit_code=$?
+
+  if [[ -f "${PGDATA}/postmaster.pid" ]]; then
+    log "Encerrando PostgreSQL temporário"
+
+    pg_ctl \
+      --pgdata="${PGDATA}" \
+      --mode=fast \
+      --wait \
+      stop || true
+  fi
+
+  exit "${exit_code}"
+}
+
+trap cleanup EXIT
+trap 'fail "Falha na linha ${LINENO}: ${BASH_COMMAND}"' ERR
+
+[[ -d "${BACKUP_ROOT}" ]] ||
+  fail "Diretório de backup não encontrado: ${BACKUP_ROOT}"
+
+log "Localizando backup"
+
+if [[ -n "${BACKUP_TIMESTAMP}" ]]; then
+  CHECKSUM_FILE="$(
+    find "${BACKUP_ROOT}" \
+      -type f \
+      -name "sha256-${BACKUP_TIMESTAMP}.txt" \
+      -print \
+      -quit
+  )"
+else
+  CHECKSUM_FILE="$(
+    find "${BACKUP_ROOT}" \
+      -type f \
+      -name 'sha256-*.txt' \
+      -printf '%T@ %p\n' |
+    sort -nr |
+    head -n 1 |
+    cut -d' ' -f2-
+  )"
+fi
+
+[[ -n "${CHECKSUM_FILE}" ]] ||
+  fail "Nenhum backup foi encontrado."
+
+BACKUP_DIRECTORY="$(dirname "${CHECKSUM_FILE}")"
+CHECKSUM_FILENAME="$(basename "${CHECKSUM_FILE}")"
+
+SELECTED_TIMESTAMP="$(
+  printf '%s' "${CHECKSUM_FILENAME}" |
+    sed -E 's/^sha256-(.*)\.txt$/\1/'
+)"
+
+GLOBALS_FILE="${BACKUP_DIRECTORY}/globals-${SELECTED_TIMESTAMP}.sql.gz"
+DATABASES_DIRECTORY="${BACKUP_DIRECTORY}/databases"
+METADATA_FILE="${BACKUP_DIRECTORY}/metadata-${SELECTED_TIMESTAMP}.txt"
+
+log "Backup selecionado: ${SELECTED_TIMESTAMP}"
+log "Diretório: ${BACKUP_DIRECTORY}"
+
+[[ -f "${GLOBALS_FILE}" ]] ||
+  fail "Arquivo globals não encontrado."
+
+[[ -d "${DATABASES_DIRECTORY}" ]] ||
+  fail "Diretório de dumps não encontrado."
+
+log "Validando checksums"
+
+(
+  cd /
+  sha256sum --check "${CHECKSUM_FILE}"
+)
+
+log "Inicializando PostgreSQL temporário"
+
+mkdir -p "${PGDATA}"
+
+initdb \
+  --pgdata="${PGDATA}" \
+  --username="${POSTGRES_USER}" \
+  --auth=trust \
+  --encoding=UTF8 \
+  --locale=C.UTF-8
+
+cat >> "${PGDATA}/postgresql.conf" <<EOF
+listen_addresses = '127.0.0.1'
+port = ${POSTGRES_PORT}
+unix_socket_directories = '/tmp'
+fsync = off
+synchronous_commit = off
+full_page_writes = off
+EOF
+
+log "Iniciando PostgreSQL temporário"
+
+pg_ctl \
+  --pgdata="${PGDATA}" \
+  --log=/tmp/postgresql-dr.log \
+  --wait \
+  start
+
+pg_isready \
+  --host=127.0.0.1 \
+  --port="${POSTGRES_PORT}" \
+  --username="${POSTGRES_USER}"
+
+log "Restaurando roles e objetos globais"
+
+gzip --decompress --stdout "${GLOBALS_FILE}" |
+  psql \
+    --host=127.0.0.1 \
+    --port="${POSTGRES_PORT}" \
+    --username="${POSTGRES_USER}" \
+    --dbname=postgres \
+    --set=ON_ERROR_STOP=1
+
+mapfile -t DUMP_FILES < <(
+  find "${DATABASES_DIRECTORY}" \
+    -maxdepth 1 \
+    -type f \
+    -name "*-${SELECTED_TIMESTAMP}.dump" \
+    -print |
+  sort
+)
+
+[[ "${#DUMP_FILES[@]}" -gt 0 ]] ||
+  fail "Nenhum dump foi encontrado."
+
+TOTAL_TABLES=0
+
+for dump_file in "${DUMP_FILES[@]}"; do
+  dump_filename="$(basename "${dump_file}")"
+
+  database="$(
+    printf '%s' "${dump_filename}" |
+      sed "s/-${SELECTED_TIMESTAMP}\.dump$//"
+  )"
+
+  log "Preparando banco ${database}"
+
+  if [[ "${database}" != "postgres" ]]; then
+    createdb \
+      --host=127.0.0.1 \
+      --port="${POSTGRES_PORT}" \
+      --username="${POSTGRES_USER}" \
+      --template=template0 \
+      "${database}"
+  fi
+
+  log "Restaurando banco ${database}"
+
+  pg_restore \
+    --host=127.0.0.1 \
+    --port="${POSTGRES_PORT}" \
+    --username="${POSTGRES_USER}" \
+    --dbname="${database}" \
+    --no-owner \
+    --exit-on-error \
+    --single-transaction \
+    "${dump_file}"
+
+  table_count="$(
+    psql \
+      --host=127.0.0.1 \
+      --port="${POSTGRES_PORT}" \
+      --username="${POSTGRES_USER}" \
+      --dbname="${database}" \
+      --tuples-only \
+      --no-align \
+      --set=ON_ERROR_STOP=1 \
+      --command="
+        SELECT COUNT(*)
+        FROM information_schema.tables
+        WHERE table_schema NOT IN (
+          'pg_catalog',
+          'information_schema'
+        )
+        AND table_type = 'BASE TABLE';
+      "
+  )"
+
+  database_size="$(
+    psql \
+      --host=127.0.0.1 \
+      --port="${POSTGRES_PORT}" \
+      --username="${POSTGRES_USER}" \
+      --dbname="${database}" \
+      --tuples-only \
+      --no-align \
+      --set=ON_ERROR_STOP=1 \
+      --command="
+        SELECT pg_size_pretty(
+          pg_database_size(current_database())
+        );
+      "
+  )"
+
+  RESTORED_DATABASES+=("${database}")
+  TOTAL_TABLES="$((TOTAL_TABLES + table_count))"
+
+  log "Banco restaurado: ${database}"
+  log "Tabelas: ${table_count}"
+  log "Tamanho: ${database_size}"
+done
+
+log "Executando validação geral"
+
+database_count="$(
+  psql \
+    --host=127.0.0.1 \
+    --port="${POSTGRES_PORT}" \
+    --username="${POSTGRES_USER}" \
+    --dbname=postgres \
+    --tuples-only \
+    --no-align \
+    --command="
+      SELECT COUNT(*)
+      FROM pg_database
+      WHERE datallowconn = true
+        AND datistemplate = false;
+    "
+)"
+
+log "Disaster Recovery validado com sucesso"
+log "Backup: ${SELECTED_TIMESTAMP}"
+log "Bancos restaurados: ${#RESTORED_DATABASES[@]}"
+log "Bancos disponíveis: ${database_count}"
+log "Total de tabelas: ${TOTAL_TABLES}"

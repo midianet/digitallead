@@ -1,0 +1,238 @@
+graylog:
+  enabled: true
+  enterprise: false
+  replicas: 1
+
+  service:
+    type: ClusterIP
+    ports:
+      app: 9000
+      metrics: 9833
+    metrics:
+      enabled: true
+
+  inputs:
+    - name: input-gelf-tcp
+      port: 12201
+      targetPort: 12201
+      protocol: TCP
+
+    - name: input-gelf-udp
+      port: 12201
+      targetPort: 12201
+      protocol: UDP
+
+  config:
+    rootUsername: admin
+
+    # Fornecidos pelas variáveis de ambiente vindas do Secret.
+    rootPassword: ""
+    customSecretPepper: ""
+
+    timezone: America/Sao_Paulo
+    selfSignedStartup: "true"
+
+    serverJavaOpts: "-Xms1g -Xmx1g"
+
+    leaderElectionMode: automatic
+    contentPacksAutoInstall: "true"
+    isCloud: "false"
+
+    tls:
+      enabled: false
+
+    mongodb:
+      customUri: ""
+      maxConnections: "100"
+      versionProbeAttempts: "20"
+
+    messageJournal:
+      enabled: "true"
+      flushAge: "1m"
+      flushInterval: "1000000"
+      maxAge: "12h"
+      segmentAge: "1h"
+      segmentSize: "100mb"
+
+    network:
+      connectTimeout: "5s"
+      enableCors: "false"
+      enableGzip: "true"
+      maxHeaderSize: "8192"
+      readTimeout: "10s"
+      threadPoolSize: "32"
+      externalUri: "https://graylog.app.digitallead.com.br/"
+
+    performance:
+      asyncEventbusProcessors: "2"
+      autoRestartInputs: "true"
+      inputBufferProcessors: "2"
+      inputBufferRingSize: "65536"
+      inputBufferWaitStrategy: blocking
+      outputBatchSize: "500"
+      outputFaultCountThreshold: "5"
+      outputFaultPenaltySeconds: "30"
+      outputFlushInterval: "1"
+      outputBufferProcessorThreadsCorePoolSize: "2"
+
+    email:
+      enabled: "false"
+
+    plugins:
+      enabled: false
+
+    geolocation:
+      enabled: false
+
+  extraEnv:
+    - name: GRAYLOG_ROOT_PASSWORD_SHA2
+      valueFrom:
+        secretKeyRef:
+          name: graylog-credentials
+          key: root-password-sha2
+
+    - name: GRAYLOG_PASSWORD_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: graylog-credentials
+          key: password-secret
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1536Mi
+    limits:
+      cpu: "2"
+      memory: 3Gi
+
+  persistence:
+    enabled: true
+    storageClass: dl-local-retain
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 8
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 8
+
+  podDisruptionBudget:
+    enabled: false
+
+# -------------------------------------------------------------------
+# Graylog Data Node
+# -------------------------------------------------------------------
+
+datanode:
+  enabled: true
+  replicas: 1
+
+  config:
+    opensearchHeap: 2g
+    javaOpts: "-Xms512m -Xmx512m"
+
+    skipPreflightChecks: "false"
+
+    # Reduzido em relação ao default de 10 GB para o ambiente inicial.
+    nodeSearchCacheSize: 2gb
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 3Gi
+    limits:
+      cpu: "2"
+      memory: 5Gi
+
+  persistence:
+    enabled: true
+
+    data:
+      enabled: true
+      storageClass: dl-local-retain
+      accessModes:
+        - ReadWriteOnce
+      size: 40Gi
+
+    nativeLibs:
+      enabled: false
+
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 90
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 8
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 8
+
+  podDisruptionBudget:
+    enabled: false
+
+# -------------------------------------------------------------------
+# Ingress
+# -------------------------------------------------------------------
+
+# Será criado separadamente depois da validação interna.
+ingress:
+  enabled: false
+
+# -------------------------------------------------------------------
+# MongoDB Community Resource
+# -------------------------------------------------------------------
+
+mongodb:
+  communityResource:
+    enabled: true
+
+  version: "7.0.25"
+
+  replicas: 1
+  arbiters: 0
+
+  persistence:
+    storageClass: dl-local-retain
+
+    size:
+      data: 10G
+      logs: 2G
+
+  serviceAccount:
+    create: true
+    automount: true
+
+    role:
+      create: true
+      rules:
+        - apiGroups:
+            - ""
+          resources:
+            - secrets
+          resourceNames: []
+          verbs:
+            - get
+
+        - apiGroups:
+            - ""
+          resources:
+            - pods
+          resourceNames: []
+          verbs:
+            - get
+            - patch
+            - delete

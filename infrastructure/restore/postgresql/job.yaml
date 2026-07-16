@@ -1,0 +1,104 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgresql-restore-validation
+  namespace: dl-database
+  labels:
+    app.kubernetes.io/name: postgresql-restore
+    app.kubernetes.io/component: restore-validation
+    app.kubernetes.io/part-of: digitallead-platform
+    digitallead.com.br/id: PLT-502
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 7200
+  ttlSecondsAfterFinished: 86400
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgresql-restore
+        app.kubernetes.io/component: restore-validation
+        app.kubernetes.io/part-of: digitallead-platform
+        digitallead.com.br/id: PLT-502
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: restore
+          image: postgres:18.4-bookworm
+          imagePullPolicy: IfNotPresent
+
+          command:
+            - /bin/bash
+            - /scripts/restore.sh
+
+          env:
+            - name: POSTGRES_HOST
+              value: postgresql.dl-database.svc.cluster.local
+
+            - name: POSTGRES_PORT
+              value: "5432"
+
+            - name: POSTGRES_USER
+              value: postgres
+
+            - name: BACKUP_ROOT
+              value: /backup/postgresql
+
+            # Vazio significa selecionar o backup mais recente.
+            - name: BACKUP_TIMESTAMP
+              value: ""
+
+            # Vazio significa validar todos os bancos do backup.
+            - name: DATABASE_FILTER
+              value: ""
+
+            - name: RESTORE_PREFIX
+              value: dl_restore_validation
+
+            # Não preservar bancos temporários por padrão.
+            - name: KEEP_TEMP_DATABASE
+              value: "false"
+
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-auth
+                  key: postgres-password
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            runAsGroup: 999
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: backup
+              mountPath: /backup
+              readOnly: true
+
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+
+      volumes:
+        - name: backup
+          persistentVolumeClaim:
+            claimName: postgresql-backup
+
+        - name: scripts
+          configMap:
+            name: postgresql-restore-script
+            defaultMode: 0444

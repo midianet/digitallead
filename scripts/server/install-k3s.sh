@@ -1,4 +1,3 @@
-cat > scripts/server/install-k3s.sh <<'EOF'
 #!/usr/bin/env bash
 
 set -Eeuo pipefail
@@ -106,4 +105,3 @@ log "Criptografia de Secrets"
 k3s secrets-encrypt status
 
 log "Instalação concluída"
-EOF

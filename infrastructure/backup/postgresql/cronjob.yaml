@@ -34,7 +34,7 @@ spec:
 
           containers:
             - name: backup
-              image: postgres:17.5-bookworm
+              image: postgres:18.4-bookworm
               imagePullPolicy: IfNotPresent
 
               command:
@@ -96,4 +96,4 @@ spec:
             - name: scripts
               configMap:
                 name: postgresql-backup-script
-                defaultMode: 0550
+                defaultMode: 0444

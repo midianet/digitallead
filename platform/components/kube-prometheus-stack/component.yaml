@@ -1,0 +1,25 @@
+apiVersion: platform.digitallead.com.br/v1alpha1
+kind: HelmComponent
+
+metadata:
+  name: kube-prometheus-stack
+  id: PLT-601
+  description: Stack central de monitoramento e observabilidade da plataforma
+
+release:
+  name: kube-prometheus-stack
+  namespace: dl-monitoring
+  createNamespace: true
+  atomic: true
+  timeout: 15m
+  historyMax: 10
+
+chart:
+  repository:
+    name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  name: kube-prometheus-stack
+  version: 87.16.1
+
+values:
+  file: values.yaml

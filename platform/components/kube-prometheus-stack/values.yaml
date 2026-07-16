@@ -1,0 +1,209 @@
+fullnameOverride: kube-prometheus-stack
+
+# Componentes do control plane do K3s não são expostos
+# pelo mesmo modelo de um cluster kubeadm convencional.
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeEtcd:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+
+# Mantemos o monitoramento do kubelet e do API Server.
+kubeApiServer:
+  enabled: true
+
+kubelet:
+  enabled: true
+
+coreDns:
+  enabled: true
+
+# -------------------------------------------------------------------
+# Prometheus Operator
+# -------------------------------------------------------------------
+
+prometheusOperator:
+  enabled: true
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -------------------------------------------------------------------
+# Prometheus
+# -------------------------------------------------------------------
+
+prometheus:
+  enabled: true
+
+  service:
+    type: ClusterIP
+
+  ingress:
+    enabled: false
+
+  prometheusSpec:
+    replicas: 1
+
+    retention: 15d
+    retentionSize: 15GB
+
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+
+    enableAdminAPI: false
+
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        cpu: "2"
+        memory: 4Gi
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: dl-local-retain
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+
+    # Permite que o Prometheus encontre ServiceMonitors e PodMonitors
+    # criados fora deste Helm release.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+
+    serviceMonitorNamespaceSelector: {}
+    podMonitorNamespaceSelector: {}
+    ruleNamespaceSelector: {}
+
+# -------------------------------------------------------------------
+# Alertmanager
+# -------------------------------------------------------------------
+
+alertmanager:
+  enabled: true
+
+  service:
+    type: ClusterIP
+
+  ingress:
+    enabled: false
+
+  alertmanagerSpec:
+    replicas: 1
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: dl-local-retain
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
+
+# -------------------------------------------------------------------
+# Grafana
+# -------------------------------------------------------------------
+
+grafana:
+  enabled: true
+
+  defaultDashboardsEnabled: true
+  defaultDashboardsTimezone: America/Sao_Paulo
+
+  service:
+    type: ClusterIP
+
+  ingress:
+    enabled: false
+
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: dl-local-retain
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+    finalizers:
+      - kubernetes.io/pvc-protection
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  admin:
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+
+  grafana.ini:
+    server:
+      domain: grafana.app.digitallead.com.br
+      root_url: https://grafana.app.digitallead.com.br
+      enforce_domain: false
+
+    analytics:
+      reporting_enabled: false
+      check_for_updates: false
+
+    users:
+      allow_sign_up: false
+
+    security:
+      disable_gravatar: true
+      cookie_secure: true
+      cookie_samesite: lax
+
+# -------------------------------------------------------------------
+# kube-state-metrics
+# -------------------------------------------------------------------
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -------------------------------------------------------------------
+# Node Exporter
+# -------------------------------------------------------------------
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
