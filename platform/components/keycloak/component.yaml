@@ -1,0 +1,22 @@
+apiVersion: platform.digitallead.com.br/v1alpha1
+kind: HelmComponent
+
+metadata:
+  id: PLT-801
+  name: keycloak
+  description: Serviço centralizado de identidade e acesso da Digitalead
+
+release:
+  name: keycloak
+  namespace: dl-auth
+
+chart:
+  repository:
+    name: codecentric
+    url: https://codecentric.github.io/helm-charts
+
+  name: keycloakx
+  version: 7.2.0
+
+values:
+  file: values.yaml

@@ -1,0 +1,34 @@
+fullnameOverride: headlamp
+
+replicaCount: 1
+
+config:
+  inCluster: true
+  inClusterContextName: digitalead
+  extraArgs: []
+
+  oidc:
+    clientID: "headlamp"
+    clientSecret: "i4aEYUM3VEcNGiNqgKGysDxVwqUNAhtb"
+    issuerURL: "https://auth.app.digitallead.com.br/realms/digitalead"
+    callbackURL: "https://headlamp.app.digitallead.com.br/oidc-callback"
+    scopes: "profile,email"
+    useAccessToken: false
+    usePKCE: false
+    useCookie: true  
+
+serviceAccount:
+  create: true
+  name: headlamp
+
+clusterRoleBinding:
+  create: true
+  clusterRoleName: cluster-admin
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi     

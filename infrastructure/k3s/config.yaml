@@ -43,3 +43,11 @@ cluster-domain: "cluster.local"
 
 # Diretório principal onde o K3s armazenará seu estado.
 data-dir: "/var/lib/rancher/k3s"
+
+kube-apiserver-arg:
+  - "oidc-issuer-url=https://auth.app.digitallead.com.br/realms/digitalead"
+  - "oidc-client-id=headlamp"
+  - "oidc-username-claim=preferred_username"
+  - "oidc-username-prefix=keycloak:"
+  - "oidc-groups-claim=groups"
+  - "oidc-groups-prefix=keycloak:"

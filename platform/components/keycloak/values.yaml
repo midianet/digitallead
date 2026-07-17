@@ -1,0 +1,233 @@
+replicas: 1
+
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "26.6.2"
+  digest: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Mantém o entrypoint e os argumentos definidos pelo chart.
+command:
+  - /opt/keycloak/bin/kc.sh
+
+args:
+  - start
+
+extraEnv: |
+  - name: KC_BOOTSTRAP_ADMIN_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-bootstrap-admin
+        key: username
+
+  - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-bootstrap-admin
+        key: password
+
+  - name: KC_HOSTNAME
+    value: "https://auth.app.digitallead.com.br"
+
+  - name: KC_HOSTNAME_STRICT
+    value: "true"
+
+
+  - name: KC_LOG_LEVEL
+    value: "INFO"
+
+  - name: JAVA_OPTS_APPEND
+    value: >-
+      -XX:MaxRAMPercentage=70.0
+      -XX:InitialRAMPercentage=35.0
+      -Djava.net.preferIPv4Stack=true
+      -Duser.timezone=America/Sao_Paulo
+
+extraEnvFrom: ""
+
+extraManifests:
+  - |
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: keycloak-themes
+      namespace: {{ .Release.Namespace }}
+      labels:
+        app.kubernetes.io/name: keycloak-themes
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+
+extraVolumes: |
+  - name: keycloak-themes
+    persistentVolumeClaim:
+      claimName: keycloak-themes
+
+extraVolumeMounts: |
+  - name: keycloak-themes
+    mountPath: /opt/keycloak/themes
+
+database:
+  vendor: postgres
+  hostname: postgresql.dl-database.svc.cluster.local
+  port: 5432
+  database: keycloak
+  username: keycloak
+  password: ""
+
+  existingSecret: keycloak-database
+  existingSecretKey: password
+
+dbchecker:
+  enabled: true
+
+  image:
+    repository: docker.io/busybox
+    tag: "1.37"
+    pullPolicy: IfNotPresent
+
+cache:
+  stack: default
+
+proxy:
+  enabled: true
+  mode: xforwarded
+
+  http:
+    enabled: true
+
+metrics:
+  enabled: true
+
+health:
+  enabled: true
+
+http:
+  relativePath: "/"
+  internalPort: http-internal
+  internalScheme: HTTP
+
+service:
+  type: ClusterIP
+  httpPort: 80
+  httpsPort: 8443
+
+  annotations: {}
+  labels: {}
+
+serviceHeadless:
+  annotations: {}
+  labels: {}
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  servicePort: http
+
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+
+  labels: {}
+
+  rules:
+    - host: auth.app.digitallead.com.br
+      paths:
+        - path: /
+          pathType: Prefix
+
+  tls:
+    - hosts:
+        - auth.app.digitallead.com.br
+      secretName: keycloak-tls
+
+  console:
+    enabled: false
+
+serviceMonitor:
+  enabled: true
+  namespace: ""
+  namespaceSelector: {}
+
+  labels:
+    release: kube-prometheus-stack
+
+  interval: 30s
+  scrapeTimeout: 10s
+
+  path: "/metrics"
+  port: http-internal
+  scheme: HTTP
+
+prometheusRule:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 768Mi
+
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+
+livenessProbe: |
+  httpGet:
+    path: /health/live
+    port: http-internal
+    scheme: HTTP
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe: |
+  httpGet:
+    path: /health/ready
+    port: http-internal
+    scheme: HTTP
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 6
+
+startupProbe: |
+  httpGet:
+    path: /health
+    port: http-internal
+    scheme: HTTP
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 60
+
+podDisruptionBudget: {}
+
+autoscaling:
+  enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: |
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              {{- include "keycloak.selectorLabels" . | nindent 14 }}
+          topologyKey: kubernetes.io/hostname
+
+networkPolicy:
+  enabled: false
+
+test:
+  enabled: false
