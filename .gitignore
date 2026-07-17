@@ -49,3 +49,6 @@ infrastructure/database/secrets/
 
 # Ambiente virtual Python
 .venv/
+
+# Credenciais locais de componentes Helm
+platform/components/*/values.local.yaml

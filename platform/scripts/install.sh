@@ -3,11 +3,14 @@
 set -Eeuo pipefail
 
 PLATFORM_ROOT="$(
-  cd "$(dirname "${BASH_SOURCE[0]}")/../../.."
+  cd "$(dirname "${BASH_SOURCE[0]}")/../.."
   pwd
 )"
 
 COMPONENTS_ROOT="${PLATFORM_ROOT}/platform/components"
+
+DEFAULT_TIMEOUT="20m"
+DEFAULT_HISTORY_MAX="10"
 
 log() {
   printf '[%s] %s\n' \
@@ -29,8 +32,9 @@ Uso:
 
   $0 <componente>
 
-Exemplo:
+Exemplos:
 
+  $0 graylog
   $0 kube-prometheus-stack
 EOF
 }
@@ -45,7 +49,6 @@ require_command() {
 read_required_value() {
   local expression="$1"
   local description="$2"
-
   local value
 
   value="$(
@@ -53,24 +56,7 @@ read_required_value() {
   )"
 
   [[ -n "${value}" ]] ||
-    fail "Campo obrigatório não encontrado: ${description}"
-
-  printf '%s' "${value}"
-}
-
-read_optional_value() {
-  local expression="$1"
-  local default_value="$2"
-
-  local value
-
-  value="$(
-    yq eval "${expression} // \"\"" "${COMPONENT_FILE}"
-  )"
-
-  if [[ -z "${value}" ]]; then
-    value="${default_value}"
-  fi
+    fail "Campo obrigatório ausente: ${description}"
 
   printf '%s' "${value}"
 }
@@ -92,7 +78,14 @@ COMPONENT_FILE="${COMPONENT_DIRECTORY}/component.yaml"
   fail "Componente não encontrado: ${COMPONENT_NAME}"
 
 [[ -f "${COMPONENT_FILE}" ]] ||
-  fail "Arquivo component.yaml não encontrado: ${COMPONENT_FILE}"
+  fail "Arquivo não encontrado: ${COMPONENT_FILE}"
+
+COMPONENT_KIND="$(
+  read_required_value '.kind' 'kind'
+)"
+
+[[ "${COMPONENT_KIND}" == "HelmComponent" ]] ||
+  fail "Tipo de componente não suportado: ${COMPONENT_KIND}"
 
 RELEASE_NAME="$(
   read_required_value '.release.name' 'release.name'
@@ -102,11 +95,11 @@ NAMESPACE="$(
   read_required_value '.release.namespace' 'release.namespace'
 )"
 
-CHART_REPOSITORY_NAME="$(
+REPOSITORY_NAME="$(
   read_required_value '.chart.repository.name' 'chart.repository.name'
 )"
 
-CHART_REPOSITORY_URL="$(
+REPOSITORY_URL="$(
   read_required_value '.chart.repository.url' 'chart.repository.url'
 )"
 
@@ -119,23 +112,7 @@ CHART_VERSION="$(
 )"
 
 VALUES_FILE_NAME="$(
-  read_optional_value '.values.file' 'values.yaml'
-)"
-
-CREATE_NAMESPACE="$(
-  read_optional_value '.release.createNamespace' 'true'
-)"
-
-ATOMIC="$(
-  read_optional_value '.release.atomic' 'true'
-)"
-
-TIMEOUT="$(
-  read_optional_value '.release.timeout' '15m'
-)"
-
-HISTORY_MAX="$(
-  read_optional_value '.release.historyMax' '10'
+  yq eval '.values.file // "values.yaml"' "${COMPONENT_FILE}"
 )"
 
 VALUES_FILE="${COMPONENT_DIRECTORY}/${VALUES_FILE_NAME}"
@@ -146,54 +123,34 @@ VALUES_FILE="${COMPONENT_DIRECTORY}/${VALUES_FILE_NAME}"
 log "Componente: ${COMPONENT_NAME}"
 log "Release: ${RELEASE_NAME}"
 log "Namespace: ${NAMESPACE}"
-log "Chart: ${CHART_REPOSITORY_NAME}/${CHART_NAME}"
+log "Chart: ${REPOSITORY_NAME}/${CHART_NAME}"
 log "Versão: ${CHART_VERSION}"
+log "Values: ${VALUES_FILE}"
 
-if ! helm repo list \
-  --output yaml |
-  yq eval \
-    ".[] | select(.name == \"${CHART_REPOSITORY_NAME}\") | .name" - |
-  grep -qx "${CHART_REPOSITORY_NAME}"; then
+log "Registrando repositório Helm"
 
-  log "Adicionando repositório Helm ${CHART_REPOSITORY_NAME}"
-
-  helm repo add \
-    "${CHART_REPOSITORY_NAME}" \
-    "${CHART_REPOSITORY_URL}"
-fi
+helm repo add \
+  "${REPOSITORY_NAME}" \
+  "${REPOSITORY_URL}" \
+  --force-update >/dev/null
 
 log "Atualizando repositórios Helm"
 
-helm repo update
+helm repo update >/dev/null
 
-HELM_ARGUMENTS=(
-  upgrade
-  --install
-  "${RELEASE_NAME}"
-  "${CHART_REPOSITORY_NAME}/${CHART_NAME}"
-  --namespace
-  "${NAMESPACE}"
-  --version
-  "${CHART_VERSION}"
-  --values
-  "${VALUES_FILE}"
-  --timeout
-  "${TIMEOUT}"
-  --history-max
-  "${HISTORY_MAX}"
-)
+log "Executando helm upgrade --install"
 
-if [[ "${CREATE_NAMESPACE}" == "true" ]]; then
-  HELM_ARGUMENTS+=(--create-namespace)
-fi
-
-if [[ "${ATOMIC}" == "true" ]]; then
-  HELM_ARGUMENTS+=(--atomic)
-fi
-
-log "Instalando componente"
-
-helm "${HELM_ARGUMENTS[@]}"
+helm upgrade \
+  --install \
+  "${RELEASE_NAME}" \
+  "${REPOSITORY_NAME}/${CHART_NAME}" \
+  --namespace "${NAMESPACE}" \
+  --create-namespace \
+  --version "${CHART_VERSION}" \
+  --values "${VALUES_FILE}" \
+  --atomic \
+  --timeout "${DEFAULT_TIMEOUT}" \
+  --history-max "${DEFAULT_HISTORY_MAX}"
 
 log "Instalação concluída"
 

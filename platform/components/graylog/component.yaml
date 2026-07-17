@@ -2,22 +2,19 @@ apiVersion: platform.digitallead.com.br/v1alpha1
 kind: HelmComponent
 
 metadata:
-  name: graylog
   id: PLT-701
+  name: graylog
   description: Plataforma centralizada de logs da Digitalead
 
 release:
   name: graylog
   namespace: dl-logging
-  createNamespace: true
-  atomic: true
-  timeout: 20m
-  historyMax: 10
 
 chart:
   repository:
     name: graylog
     url: https://graylog2.github.io/graylog-helm
+
   name: graylog
   version: 1.0.0
 

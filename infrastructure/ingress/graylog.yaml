@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: graylog
+  namespace: dl-logging
+  labels:
+    app.kubernetes.io/name: graylog
+    app.kubernetes.io/part-of: digitallead-platform
+    digitallead.com.br/id: PLT-701
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - graylog.app.digitallead.com.br
+      secretName: graylog-tls
+
+  rules:
+    - host: graylog.app.digitallead.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: graylog-svc
+                port:
+                  number: 9000

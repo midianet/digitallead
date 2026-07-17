@@ -1,3 +1,6 @@
+global:
+  storageClass: dl-local-retain
+
 graylog:
   enabled: true
   enterprise: false
@@ -5,41 +8,51 @@ graylog:
 
   service:
     type: ClusterIP
+
     ports:
       app: 9000
       metrics: 9833
+
     metrics:
       enabled: true
 
   inputs:
-    - name: input-gelf-tcp
+    - name: input-gelf
       port: 12201
       targetPort: 12201
       protocol: TCP
 
-    - name: input-gelf-udp
-      port: 12201
-      targetPort: 12201
-      protocol: UDP
+    - name: input-forwarder
+      port: 13301
+      targetPort: 13301
+      protocol: TCP
 
   config:
     rootUsername: admin
 
-    # Fornecidos pelas variáveis de ambiente vindas do Secret.
-    rootPassword: ""
-    customSecretPepper: ""
+    # Não commitar valores reais.
+    rootPassword: "gi0b5wUdvTSOiU1aVdcV8BaAl6YbcLob"
+    customSecretPepper: "205a0da58472cdc8fdcbea0c73b723005b59bb19fc355ff50fc31cff57bf3fa15f813c88a1b30e790eda3c6f47028896"
 
     timezone: America/Sao_Paulo
+
+    # Certificado interno autogerado entre Graylog e Data Nodes.
     selfSignedStartup: "true"
 
     serverJavaOpts: "-Xms1g -Xmx1g"
+    extraServerJavaOpts: []
 
     leaderElectionMode: automatic
     contentPacksAutoInstall: "true"
     isCloud: "false"
 
     tls:
+      # TLS público termina no Traefik.
       enabled: false
+      secretName: ""
+      keyPassword: ""
+      updateKeyStore: false
+      keyStorePass: changeit
 
     mongodb:
       customUri: ""
@@ -48,20 +61,20 @@ graylog:
 
     messageJournal:
       enabled: "true"
-      flushAge: "1m"
+      flushAge: 1m
       flushInterval: "1000000"
-      maxAge: "12h"
-      segmentAge: "1h"
-      segmentSize: "100mb"
+      maxAge: 12h
+      segmentAge: 1h
+      segmentSize: 100mb
 
     network:
-      connectTimeout: "5s"
+      connectTimeout: 5s
       enableCors: "false"
       enableGzip: "true"
       maxHeaderSize: "8192"
-      readTimeout: "10s"
+      readTimeout: 10s
       threadPoolSize: "32"
-      externalUri: "https://graylog.app.digitallead.com.br/"
+      externalUri: ""
 
     performance:
       asyncEventbusProcessors: "2"
@@ -69,11 +82,14 @@ graylog:
       inputBufferProcessors: "2"
       inputBufferRingSize: "65536"
       inputBufferWaitStrategy: blocking
+      jobSchedulerConcurrencyLimits: ""
       outputBatchSize: "500"
       outputFaultCountThreshold: "5"
       outputFaultPenaltySeconds: "30"
       outputFlushInterval: "1"
       outputBufferProcessorThreadsCorePoolSize: "2"
+      outputBufferProcessors: ""
+      processBufferProcessors: ""
 
     email:
       enabled: "false"
@@ -84,18 +100,9 @@ graylog:
     geolocation:
       enabled: false
 
-  extraEnv:
-    - name: GRAYLOG_ROOT_PASSWORD_SHA2
-      valueFrom:
-        secretKeyRef:
-          name: graylog-credentials
-          key: root-password-sha2
-
-    - name: GRAYLOG_PASSWORD_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: graylog-credentials
-          key: password-secret
+  env: {}
+  extraEnv: []
+  plugins: []
 
   resources:
     requests:
@@ -118,6 +125,7 @@ graylog:
     periodSeconds: 15
     timeoutSeconds: 10
     failureThreshold: 8
+    successThreshold: 1
 
   readinessProbe:
     enabled: true
@@ -125,26 +133,40 @@ graylog:
     periodSeconds: 15
     timeoutSeconds: 10
     failureThreshold: 8
+    successThreshold: 1
 
   podDisruptionBudget:
     enabled: false
+    minAvailable: 1
 
-# -------------------------------------------------------------------
-# Graylog Data Node
-# -------------------------------------------------------------------
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
 datanode:
   enabled: true
   replicas: 1
 
   config:
+    nodeIdFile: ""
+
+    # Não aumentar baseado na RAM do host.
+    # O valor deve respeitar o limite de memória do Pod.
     opensearchHeap: 2g
+
     javaOpts: "-Xms512m -Xmx512m"
-
     skipPreflightChecks: "false"
-
-    # Reduzido em relação ao default de 10 GB para o ambiente inicial.
     nodeSearchCacheSize: 2gb
+
+    s3ClientDefaultSecretKey: ""
+    s3ClientDefaultAccessKey: ""
+    s3ClientDefaultEndpoint: ""
+    s3ClientDefaultRegion: us-east-2
+    s3ClientDefaultProtocol: http
+    s3ClientDefaultPathStyleAccess: "true"
+
+  env: {}
+  extraEnv: []
 
   resources:
     requests:
@@ -163,16 +185,32 @@ datanode:
       accessModes:
         - ReadWriteOnce
       size: 40Gi
+      existingClaim: ""
+      mountPath: ""
+      annotations: {}
+      labels: {}
+      selector: {}
+      dataSource: {}
 
     nativeLibs:
       enabled: false
+      storageClass: dl-local-retain
+      accessModes:
+        - ReadWriteOnce
+      size: 2Gi
+      existingClaim: ""
+      mountPath: ""
+      annotations: {}
+      labels: {}
+      selector: {}
 
   livenessProbe:
     enabled: true
-    initialDelaySeconds: 90
+    initialDelaySeconds: 120
     periodSeconds: 15
     timeoutSeconds: 10
     failureThreshold: 8
+    successThreshold: 1
 
   readinessProbe:
     enabled: true
@@ -180,21 +218,57 @@ datanode:
     periodSeconds: 15
     timeoutSeconds: 10
     failureThreshold: 8
+    successThreshold: 1
 
   podDisruptionBudget:
     enabled: false
+    minAvailable: 1
 
-# -------------------------------------------------------------------
-# Ingress
-# -------------------------------------------------------------------
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
-# Será criado separadamente depois da validação interna.
 ingress:
-  enabled: false
+  enabled: true
 
-# -------------------------------------------------------------------
-# MongoDB Community Resource
-# -------------------------------------------------------------------
+  config:
+    defaultBackend:
+      enabled: false
+
+    tls:
+      clusterIssuer:
+        existingName: letsencrypt-production
+
+      issuer:
+        existingName: ""
+
+        managed:
+          enabled: false
+          staging: false
+
+  web:
+    enabled: true
+    className: traefik
+
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-production
+
+    hosts:
+      - host: graylog.app.digitallead.com.br
+        paths:
+          - path: /
+            pathType: Prefix
+
+    tls:
+      - secretName: graylog-tls
+        hosts:
+          - graylog.app.digitallead.com.br
+
+  forwarder:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts: []
 
 mongodb:
   communityResource:
@@ -215,9 +289,12 @@ mongodb:
   serviceAccount:
     create: true
     automount: true
+    annotations: {}
+    nameOverride: ""
 
     role:
       create: true
+
       rules:
         - apiGroups:
             - ""
